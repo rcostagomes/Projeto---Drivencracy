@@ -81,6 +81,7 @@ app.post("/choice", async (req, res) => {
     const idExist = await db.collection("polls").findOne(ObjectId(pollId));
     if (!idExist) {
       res.send(404);
+      return;
     }
     const choiceExist = await db.collection("choices").findOne(choice);
     if (choiceExist) {
@@ -96,14 +97,21 @@ app.post("/choice", async (req, res) => {
 app.get("/poll/:id/choice", async (req, res) => {
   const { id } = req.params;
   console.log(id);
+
   try {
+    const pollExist = await db
+      .collection("polls")
+      .findOne({ _id: ObjectId(id) });
+    if (!pollExist) {
+      res.sendStatus(404);
+      return;
+    }
     const choices = await db
       .collection("choices")
       .find({ pollId: id })
       .toArray();
-    if (!choices) {
-      res.sendStatus(404);
-    }
+    console.log(choices);
+
     res.status(200).send(choices);
   } catch (err) {
     console.log(err);
