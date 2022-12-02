@@ -1,0 +1,30 @@
+{
+  "name": "projeto---drivencracy",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rcostagomes/Projeto---Drivencracy.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rcostagomes/Projeto---Drivencracy/issues"
+  },
+  "homepage": "https://github.com/rcostagomes/Projeto---Drivencracy#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dayjs": "^1.11.6",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "joi": "^17.7.0",
+    "mongodb": "^4.12.1",
+    "nodemon": "^2.0.20"
+  }
+}
