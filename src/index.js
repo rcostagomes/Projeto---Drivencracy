@@ -84,7 +84,7 @@ app.post("/choice", async (req, res) => {
     }
     const choiceExist = await db.collection("choices").findOne(choice);
     if (choiceExist) {
-      res.sendStatus(409)
+      res.sendStatus(409);
     }
     await db.collection("choices").insertOne(choice);
     res.status(201).send(choice);
@@ -93,6 +93,21 @@ app.post("/choice", async (req, res) => {
   }
 });
 
-
+app.get("/poll/:id/choice", async (req, res) => {
+  const { id } = req.params;
+  console.log(id);
+  try {
+    const choices = await db
+      .collection("choices")
+      .find({ pollId: id })
+      .toArray();
+    if (!choices) {
+      res.sendStatus(404);
+    }
+    res.status(200).send(choices);
+  } catch (err) {
+    console.log(err);
+  }
+});
 
 app.listen(5000, () => console.log("App runing in port:5000"));
