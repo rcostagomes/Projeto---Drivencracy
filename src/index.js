@@ -1,9 +1,9 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 import joi from "joi";
-import dayjs from "dayjs"
+import dayjs from "dayjs";
 
 dotenv.config();
 const app = express();
@@ -17,9 +17,14 @@ mongoClient.connect().then(() => {
   db = mongoClient.db("Drivencracy");
 });
 
-const enqueteSchema = joi.object({
+const pollSchema = joi.object({
   title: joi.string().min(1).required(),
   expireAt: joi.string(),
+});
+
+const choiceSchema = joi.object({
+  title: joi.string().min(1).required(),
+  pollId: joi.string(),
 });
 
 app.post("/poll", async (req, res) => {
@@ -29,19 +34,19 @@ app.post("/poll", async (req, res) => {
     title,
     expireAt,
   };
-  const validacao = enqueteSchema.validate(enquete, { abortEarly: false });
+  const validacao = pollSchema.validate(enquete, { abortEarly: false });
   if (validacao.error) {
     const error = validacao.error.details.map((d) => d.message);
     res.status(422).send(error);
     return;
   }
-  if (expireAt === null || undefined ){
-    days = dayjs().add(30, "d").format("YYYY-MM-DD HH:mm")
+  if (expireAt === null || undefined) {
+    days = dayjs().add(30, "d").format("YYYY-MM-DD HH:mm");
   }
   try {
     await db.collection("polls").insertOne({
       title: title,
-      expireAt: days
+      expireAt: days,
     });
   } catch (err) {
     console.log(err);
@@ -52,10 +57,42 @@ app.post("/poll", async (req, res) => {
 });
 
 app.get("/poll", async (req, res) => {
-    try{
-        const enquetes = await db.collection("polls").find({}).toArray();
-        res.status(200).send(enquetes)
-    }catch(err){console.log(err)}
+  try {
+    const enquetes = await db.collection("polls").find({}).toArray();
+    res.status(200).send(enquetes);
+  } catch (err) {
+    console.log(err);
+  }
 });
+
+app.post("/choice", async (req, res) => {
+  const { title, pollId } = req.body;
+  const choice = {
+    title,
+    pollId,
+  };
+  const validacao = choiceSchema.validate(choice, { abortEarly: false });
+  if (validacao.error) {
+    const error = validacao.error.details.map((d) => d.message);
+    res.status(422).send(error);
+    return;
+  }
+  try {
+    const idExist = await db.collection("polls").findOne(ObjectId(pollId));
+    if (!idExist) {
+      res.send(404);
+    }
+    const choiceExist = await db.collection("choices").findOne(choice);
+    if (choiceExist) {
+      res.sendStatus(409)
+    }
+    await db.collection("choices").insertOne(choice);
+    res.status(201).send(choice);
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+
 
 app.listen(5000, () => console.log("App runing in port:5000"));
