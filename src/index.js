@@ -124,7 +124,7 @@ app.get("/poll/:id/choice", async (req, res) => {
 
 app.post("/choice/:id/vote", async (req, res) => {
   const { id } = req.params;
-  const date = dayjs().format("YYYY-MM-DD HH:mm");
+
   try {
     const choiceExist = await db
       .collection("choices")
@@ -139,7 +139,12 @@ app.post("/choice/:id/vote", async (req, res) => {
     if (dayjs().isAfter(dayjs(poll.expireAt))) {
       res.status(403).send("Enquete Expirada");
     }
-    await db.collection("votes").insertOne({ date: date, choiceId: id });
+
+    await db.collection("votes").insertOne({
+      createdAt: dayjs().format("YYYY-MM-DD HH:mm"),
+      choiceId: ObjectId(id),
+    });
+
     res.status(201).send("Voto Registrado");
   } catch (err) {
     console.log(err);
@@ -148,7 +153,44 @@ app.post("/choice/:id/vote", async (req, res) => {
 
 app.get("/poll/:id/result", async (req, res) => {
   const { id } = req.params;
+  let title;
+  let votes=0;
+  
   try {
+    const poll = await db.collection("polls").findOne({ _id: ObjectId(id) });
+    if (!poll) {
+      return res.sendStatus(404);
+    }
+
+    const choices = await db
+      .collection("choices")
+      .find({ pollId: id })
+      .toArray();
+
+
+    for (let i = 0; i < choices.length; i++) {
+      const mostVoted = await db
+        .collection("votes")
+        .find({ choiceId: choices[i]._id })
+        .toArray();
+
+      if (mostVoted.length > votes) {
+        votes = mostVoted.length;
+        title = choices[i].title;
+      }
+      
+    }
+    const result = {
+      _id: id,
+      title: poll.title,
+      expireAt: poll.expireAt,
+
+      result: {
+        title: title,
+        votes: votes,
+      },
+    };
+    res.send(result);
   } catch (err) {
     console.log(err);
   }
