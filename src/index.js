@@ -80,7 +80,7 @@ app.post("/choice", async (req, res) => {
   try {
     const idExist = await db.collection("polls").findOne(ObjectId(pollId));
     if (!idExist) {
-      res.send(404);
+      res.sendStatus(404);
       return;
     }
     const choiceExist = await db.collection("choices").findOne(choice);
@@ -111,11 +111,41 @@ app.get("/poll/:id/choice", async (req, res) => {
       .find({ pollId: id })
       .toArray();
     console.log(choices);
-
     res.status(200).send(choices);
   } catch (err) {
     console.log(err);
   }
 });
 
+app.post("/choice/:id/vote", async (req, res) => {
+  const { id } = req.params;
+  const date = dayjs().format("YYYY-MM-DD HH:mm");
+  try {
+    const choiceExist = await db
+      .collection("choices")
+      .findOne({ _id: ObjectId(id) });
+    if (!choiceExist) {
+      res.sendStatus(404);
+    }
+    console.log(choiceExist.pollId);
+    const poll = await db
+      .collection("polls")
+      .findOne({ _id: ObjectId(choiceExist.pollId) });
+    if (dayjs().isAfter(dayjs(poll.expireAt))) {
+      res.status(403).send("Enquete Expirada");
+    }
+    await db.collection("votes").insertOne({ date: date, choiceId: id });
+    res.status(201).send("Voto Registrado");
+  } catch (err) {
+    console.log(err);
+  }
+});
+
+app.get("/poll/:id/result", async (req, res) => {
+  const { id } = req.params;
+try{
+}catch(err){
+  console.log(err)
+}
+});
 app.listen(5000, () => console.log("App runing in port:5000"));
