@@ -87,6 +87,11 @@ app.post("/choice", async (req, res) => {
     if (choiceExist) {
       res.sendStatus(409);
     }
+
+    if (dayjs().isAfter(dayjs(idExist.expireAt))) {
+      res.status(403).send("Enquete Expirada");
+    }
+    console.log(idExist.expireAt);
     await db.collection("choices").insertOne(choice);
     res.status(201).send(choice);
   } catch (err) {
@@ -143,9 +148,9 @@ app.post("/choice/:id/vote", async (req, res) => {
 
 app.get("/poll/:id/result", async (req, res) => {
   const { id } = req.params;
-try{
-}catch(err){
-  console.log(err)
-}
+  try {
+  } catch (err) {
+    console.log(err);
+  }
 });
 app.listen(5000, () => console.log("App runing in port:5000"));
