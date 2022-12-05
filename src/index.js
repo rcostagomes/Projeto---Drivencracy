@@ -6,16 +6,14 @@ import joi from "joi";
 import dayjs from "dayjs";
 
 dotenv.config();
+const port = process.env.PORT || 3000;
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
 const mongoClient = new MongoClient(process.env.MONGO_URI);
-let db;
-mongoClient.connect().then(() => {
-  db = mongoClient.db("Drivencracy");
-});
+const db = await mongoClient.db("DrivenCracy")
 
 const pollSchema = joi.object({
   title: joi.string().min(1).required(),
@@ -191,4 +189,4 @@ app.get("/poll/:id/result", async (req, res) => {
     console.log(err);
   }
 });
-app.listen(5000, () => console.log("App runing in port:5000"));
+app.listen(port, () => console.log(`App runing in port: ${port}`));
